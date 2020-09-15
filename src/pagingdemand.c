@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h> 
 #include <sys/queue.h>
 
 //globales
@@ -32,7 +33,7 @@ void printPT();
 //Libera la memoria de la tabla de páginas
 void freePT();
 //encuentra la primera página que coincide o la crea y la inserta en la lista
-unsigned int insertOrCreatePage(unsigned int vpn);
+bool insertOrCreatePage(unsigned int vpn);
 
 Page *create_page(unsigned int vpn,unsigned int pfn);
 Frame *create_frame(int pfn, char * frame);
@@ -65,23 +66,23 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-unsigned int insertOrCreatePage(unsigned int vpn){
+bool insertOrCreatePage(unsigned int vpn){
 
     Page * p;
-    //printf("--------Looking for %u-------\n",vpn);
+
     LIST_FOREACH(p, &tabla_de_paginas, pptrs) {
+        //CASO: HIT
         if(p->vpn==vpn){
-            //printf("HIT %u %u \n",p->vpn,p->pfn);
-            //printf("-----------------------------\n",vpn);
-            return p->pfn;
+            return true;
         }  
     }
-    //printf("MISS %u-------\n",vpn);
+    
+
+    //CASO: MISS
     Page * pg = create_page(vpn,indice_de_memoria);
     indice_de_memoria++;
     LIST_INSERT_HEAD(&tabla_de_paginas, pg, pptrs);
-    //printf("-----------------------------\n",vpn);
-    return pg->pfn;
+    return false;
 }
 unsigned int translate(unsigned int address){
 
@@ -89,12 +90,14 @@ unsigned int translate(unsigned int address){
     unsigned int p_num=address>>OFFSET;
     unsigned int ofs=address%PAGE_SIZE;
 
-    printf("The address is %u, page number %u, offset %u.\n",address,p_num,ofs);
+    //printf("The address is %u, page number %u, offset %u.\n",address,p_num,ofs);
     
-    //printf("...\n",p_num);
-    //printf("...\n",ofs);
     //Insertar o crear página
-    insertOrCreatePage(p_num);
+    if(insertOrCreatePage(p_num))
+        printf("    \nHIT   page number %u\n",p_num);
+    else
+        printf("    \nMISS   page number %u\n",p_num);
+
     //Frame * f = create_frame(indice_de_memoria,);
     
     //LIST_INSERT_HEAD(&memoria_principal, f, fptrs);
