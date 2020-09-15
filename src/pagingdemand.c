@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/queue.h>
 
 //globales
@@ -62,6 +63,8 @@ unsigned int translate(unsigned int address){
     printf("Page number %u...\n",p_num);
     printf("Offset %u...\n",ofs);
 
+    
+
     return 0;
 }
 
@@ -73,5 +76,5 @@ Page *create_page(int vpn,int pfn){
 Frame *create_frame(int pfn, char * frame){
     Frame *frm = (Frame *)malloc(sizeof(Frame));
     frm->pfn = pfn;
-    strcpy(frm->frame, frame, FRAME_SIZE);
+    strcpy(frm->frame, frame);
 }
