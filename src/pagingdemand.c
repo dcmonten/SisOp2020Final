@@ -68,37 +68,36 @@ int main(int argc, char *argv[])
 unsigned int insertOrCreatePage(unsigned int vpn){
 
     Page * p;
-    printf("--------Looking for %u-------\n",vpn);
+    //printf("--------Looking for %u-------\n",vpn);
     LIST_FOREACH(p, &tabla_de_paginas, pptrs) {
         if(p->vpn==vpn){
-            printf("HIT %u %u \n",p->vpn,p->pfn);
-            printf("-----------------------------\n",vpn);
+            //printf("HIT %u %u \n",p->vpn,p->pfn);
+            //printf("-----------------------------\n",vpn);
             return p->pfn;
         }  
     }
-    printf("MISS %u-------\n",vpn);
+    //printf("MISS %u-------\n",vpn);
     Page * pg = create_page(vpn,indice_de_memoria);
     indice_de_memoria++;
     LIST_INSERT_HEAD(&tabla_de_paginas, pg, pptrs);
-    printf("-----------------------------\n",vpn);
+    //printf("-----------------------------\n",vpn);
     return pg->pfn;
 }
 unsigned int translate(unsigned int address){
 
-    printf("The address %u is getting translated...\n",address);
 
     unsigned int p_num=address>>OFFSET;
     unsigned int ofs=address%PAGE_SIZE;
+
+    printf("The address is %u, page number %u, offset %u.\n",address,p_num,ofs);
     
-    printf("Page number %u...\n",p_num);
-    printf("Offset %u...\n",ofs);
-    //
+    //printf("...\n",p_num);
+    //printf("...\n",ofs);
+    //Insertar o crear página
     insertOrCreatePage(p_num);
     //Frame * f = create_frame(indice_de_memoria,);
     
     //LIST_INSERT_HEAD(&memoria_principal, f, fptrs);
-    
-
     
     return 0;
 }
