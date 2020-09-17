@@ -4,3 +4,4 @@ pg:
 clean:
 	@echo "Eliminando compilados"
 	rm -f main
+	rm -f data.txt

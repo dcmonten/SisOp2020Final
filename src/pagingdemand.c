@@ -13,6 +13,7 @@
 //vars globales
 unsigned int indice_de_memoria = 0;
 FILE * backing_store;
+FILE * output;
 //pages
 typedef struct _Page {
     LIST_ENTRY(_Page) pptrs;
@@ -35,16 +36,54 @@ Page *create_page(unsigned int vpn,unsigned int pfn);
 unsigned int translate(unsigned int address);
 void inicializar_memoria();
 
+void printInstr(){
+    printf("\n ************************************************************************************\n");
+    printf("\n Proyecto del Segundo Parcial");
+    printf("\n Paginación y Memoria Virtual");
+    printf("\n Autor: Daniela Montenegro");
+    printf("\n Sistemas Operativos 2020-1S\n");
+    printf("\n Uso: \n");
+    printf("\n ./pagingdemand ./assets/addresses.txt data.txt\n");
+    printf("\n ./pagingdemand [path_direcciones:String] [path_resultado:String] \n");
+    printf("\n ************************************************************************************\n");   
+}
 int main(int argc, char *argv[])
 {
+    //validacion de errores en argumentos
+    if (argv[1]==NULL){
+        printf ("\n[ERROR] Archivo de direcciones no definido.\n");
+        printInstr();
+        exit(EXIT_FAILURE);
+    }
+    if(argv[2]==NULL){
+        printf ("\n[ERROR] Archivo destino no definido.\n");
+        printInstr();
+        exit(EXIT_FAILURE);
+    }
     //Inicialización de tabla de páginas
     LIST_INIT(&tabla_de_paginas);
     //inicialización de memoria principal
     inicializar_memoria();
     //Lectura de archivos
     FILE *fp;
-    fp  = fopen ("./assets/addresses.txt", "r");
+    //"./assets/addresses.txt"
+    fp  = fopen (argv[1], "r");
+    //validacion de errores en archivos
+    if(fp == NULL)
+    {
+        printf ("\n[ERROR] Archivo de direcciones ilegible.\n");
+        printInstr();
+        exit(EXIT_FAILURE);             
+    }
     backing_store = fopen ("./assets/BACKING_STORE.bin", "rb+");
+    if(backing_store == NULL)
+    {
+        printf ("\n[ERROR] Backing store no encontrado.\n");
+        printf("\nVerifique la existencia del archivo BACKING_STORE.bin en la carpeta assets\n");
+        printInstr();
+        exit(EXIT_FAILURE);             
+    }
+    output = fopen(argv[2],"w");
     unsigned int addr;
     while(fscanf(fp, "%u", &addr)!= EOF)
     {
@@ -55,10 +94,12 @@ int main(int argc, char *argv[])
     }
     fclose (fp);
     fclose (backing_store);
+    fclose(output);
     freePT();
     return 0;
 }
 
+//inicializa el arreglo multidimensional "memoria_principal" con ceros
 void inicializar_memoria(){
     for (int i = 0; i < FRAMES; i++)
     {
@@ -70,6 +111,7 @@ void inicializar_memoria(){
         }
     }
 }
+//
 bool insertOrCreatePage(unsigned int vpn, unsigned int offset){
 
     Page * p;
@@ -82,7 +124,7 @@ bool insertOrCreatePage(unsigned int vpn, unsigned int offset){
             //leer desde frame
             paddress = p->pfn*256+offset;
             requested = memoria_principal[p->pfn][offset];
-            printf("\nVirtual index: %u Physical address: %u Value: %d\n",vaddress,paddress,requested);
+            fprintf(output,"Virtual address: %u Physical address: %u Value: %d\n",vaddress,paddress,requested);
             return true;
         }  
     }
@@ -93,11 +135,9 @@ bool insertOrCreatePage(unsigned int vpn, unsigned int offset){
     Page * pg = create_page(vpn,indice_de_memoria);
     requested = memoria_principal[indice_de_memoria][offset];
     paddress = indice_de_memoria*256+offset;
-    printf("\nVirtual index: %u Physical address: %u Value: %d\n",vaddress,paddress,requested);
+    fprintf(output,"Virtual address: %u Physical address: %u Value: %d\n",vaddress,paddress,requested);
     indice_de_memoria++;
     LIST_INSERT_HEAD(&tabla_de_paginas, pg, pptrs);
-    
-    
     return false;
 }
 void backingStoreData(unsigned int vpn, unsigned int pfn, unsigned int offset){
@@ -123,15 +163,8 @@ unsigned int translate(unsigned int address){
 
     unsigned int p_num=address>>OFFSET;
     unsigned int ofs=address%PAGE_SIZE;
-
     bool hom =insertOrCreatePage(p_num,ofs);
-    /*
-    //Insertar o crear página
-    if(hom)
-        printf("    \nHIT   page number %u\n",p_num);
-    else
-        printf("    \nMISS   page number %u\n",p_num);
-    */
+    
     return 0;
 }
 void printPT(){

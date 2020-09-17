@@ -1,3 +1,3 @@
 make clean
 make pg
-./main
+./main ./assets/addresses.txt data.txt
