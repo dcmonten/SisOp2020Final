@@ -5,7 +5,6 @@
 #include <sys/queue.h>
 
 //constantes globales
-#define FULL 16
 #define OFFSET 8
 #define FRAMES 256
 #define PAGE_SIZE 256
@@ -123,7 +122,7 @@ bool insertOrCreatePage(unsigned int vpn, unsigned int offset){
     LIST_FOREACH(p, &tabla_de_paginas, pptrs) {
         //CASO: HIT
         if(p->vpn==vpn){
-            //leer desde frame
+            //leer desde frame en memoria principal
             paddress = p->pfn*256+offset;
             requested = memoria_principal[p->pfn][offset];
             fprintf(output,"Virtual address: %u Physical address: %u Value: %d\n",vaddress,paddress,requested);
@@ -133,12 +132,15 @@ bool insertOrCreatePage(unsigned int vpn, unsigned int offset){
     //CASO: MISS
     //Cargar proceso desde BACKING_STORE a un frame
     backingStoreData(vpn,indice_de_memoria);
-    //Guardar página en tabla de páginas
+    //Crear página
     Page * pg = create_page(vpn,indice_de_memoria);
+    //Obtener la data desde memoria principal
     requested = memoria_principal[indice_de_memoria][offset];
     paddress = indice_de_memoria*256+offset;
     fprintf(output,"Virtual address: %u Physical address: %u Value: %d\n",vaddress,paddress,requested);
+    //aumentar el índice de memoria
     indice_de_memoria++;
+    //insertar la página en la tabla de páginas
     LIST_INSERT_HEAD(&tabla_de_paginas, pg, pptrs);
     return false;
 }
@@ -160,7 +162,8 @@ void backingStoreData(unsigned int vpn, unsigned int pfn){
     }
         
 }
-
+//Traduce las direcciones y llama a la función que se encarga 
+//del manejo de fallo de páginas
 void translateAndGet (unsigned int address){
 
     unsigned int p_num=address>>OFFSET;
