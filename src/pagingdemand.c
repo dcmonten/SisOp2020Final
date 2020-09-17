@@ -31,9 +31,9 @@ void printPT();
 void freePT();
 //encuentra la primera página que coincide o la crea y la inserta en la lista
 bool insertOrCreatePage(unsigned int vpn, unsigned int offset);
-void backingStoreData(unsigned int vpn, unsigned int pfn, unsigned int offset);
+void backingStoreData(unsigned int vpn, unsigned int pfn);
 Page *create_page(unsigned int vpn,unsigned int pfn);
-unsigned int translate(unsigned int address);
+void translateAndGet(unsigned int address);
 void inicializar_memoria();
 
 void printInstr(){
@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
         if(addr>65535)
             printf("The address %u is not valid\n",addr);
         else
-            translate(addr);
+            translateAndGet(addr);
     }
     fclose (fp);
     fclose (backing_store);
@@ -111,7 +111,9 @@ void inicializar_memoria(){
         }
     }
 }
-//
+//Busca si la dirección virtual existe en la tabla de páginas
+//si existe, lee la data desde la memoria principal
+//si no existe, se carga la data desde el backing store a un frame en memoria principal
 bool insertOrCreatePage(unsigned int vpn, unsigned int offset){
 
     Page * p;
@@ -130,7 +132,7 @@ bool insertOrCreatePage(unsigned int vpn, unsigned int offset){
     }
     //CASO: MISS
     //Cargar proceso desde BACKING_STORE a un frame
-    backingStoreData(vpn,indice_de_memoria,offset);
+    backingStoreData(vpn,indice_de_memoria);
     //Guardar página en tabla de páginas
     Page * pg = create_page(vpn,indice_de_memoria);
     requested = memoria_principal[indice_de_memoria][offset];
@@ -140,7 +142,7 @@ bool insertOrCreatePage(unsigned int vpn, unsigned int offset){
     LIST_INSERT_HEAD(&tabla_de_paginas, pg, pptrs);
     return false;
 }
-void backingStoreData(unsigned int vpn, unsigned int pfn, unsigned int offset){
+void backingStoreData(unsigned int vpn, unsigned int pfn){
     //OFFSET DEL BACKING_STORE
     int file_offset = vpn * 256;
     //PROCESO DEL BACKING_STORE
@@ -159,13 +161,12 @@ void backingStoreData(unsigned int vpn, unsigned int pfn, unsigned int offset){
         
 }
 
-unsigned int translate(unsigned int address){
+void translateAndGet (unsigned int address){
 
     unsigned int p_num=address>>OFFSET;
     unsigned int ofs=address%PAGE_SIZE;
     bool hom =insertOrCreatePage(p_num,ofs);
     
-    return 0;
 }
 void printPT(){
     Page * p;
